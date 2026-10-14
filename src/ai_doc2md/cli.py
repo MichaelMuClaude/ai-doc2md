@@ -8,6 +8,26 @@ from ai_doc2md.errors import ConversionError
 from ai_doc2md.formats import ENGINES, UnsupportedFormatError, engine_for
 
 
+def _convert_pdf(input_path: Path, output_path: Path, args: argparse.Namespace) -> None:
+    try:
+        from ai_pdf import markdown as pdf_markdown
+        from ai_pdf.errors import PdfError
+    except ImportError as exc:
+        raise ConversionError(
+            "PDF conversion is provided by the ai-pdf tool. Install it, then run: "
+            "pip install 'ai-pdf[docling]'"
+        ) from exc
+    try:
+        pdf_markdown.convert(
+            input_path,
+            output_path,
+            device=getattr(args, "device", "cpu"),
+            keep_repeated_headers=getattr(args, "keep_repeated_headers", False),
+        )
+    except PdfError as exc:
+        raise ConversionError(str(exc)) from exc
+
+
 def _convert(args: argparse.Namespace) -> int:
     input_path = Path(args.input)
     if not input_path.is_file():
@@ -24,13 +44,14 @@ def _convert(args: argparse.Namespace) -> int:
     try:
         if engine == "pandoc":
             pandoc_engine.convert(input_path, output_path)
+        elif engine == "pdf":
+            _convert_pdf(input_path, output_path, args)
         else:
             docling_engine.convert(
                 input_path,
                 output_path,
                 device=getattr(args, "device", "cpu"),
                 keep_repeated_headers=getattr(args, "keep_repeated_headers", False),
-                ocr=getattr(args, "ocr", "auto"),
             )
     except ConversionError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -58,15 +79,8 @@ def main() -> None:
         "--engine",
         choices=ENGINES,
         default="auto",
-        help="auto picks pandoc for text formats (EPUB, DOCX, HTML, ODT, RTF, LaTeX) and "
-        "Docling for everything else; pandoc or docling forces one engine",
-    )
-    convert_parser.add_argument(
-        "--ocr",
-        choices=["auto", "on", "off"],
-        default="auto",
-        help="PDFs only. auto runs OCR only when a page has no text layer (default); "
-        "on always runs OCR; off never runs OCR",
+        help="auto picks pandoc for text formats (EPUB, DOCX, HTML, ODT, RTF, LaTeX), "
+        "ai-pdf for PDFs, and Docling for everything else",
     )
     convert_parser.add_argument(
         "--device",

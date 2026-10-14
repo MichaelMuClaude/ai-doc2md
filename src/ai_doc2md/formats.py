@@ -7,7 +7,6 @@ PANDOC_EXTENSIONS = {".epub", ".docx", ".odt", ".rtf", ".html", ".htm", ".tex", 
 
 # Formats only Docling reads, plus Docling's own handling of the PANDOC formats.
 DOCLING_ONLY_EXTENSIONS = {
-    ".pdf",
     ".doc",
     ".ppt",
     ".pptx",
@@ -27,6 +26,9 @@ DOCLING_ONLY_EXTENSIONS = {
 
 ENGINES = ("auto", "pandoc", "docling")
 
+# PDFs are handled by the ai-pdf tool, which owns qpdf and PDF-to-Markdown.
+PDF_EXTENSIONS = {".pdf"}
+
 
 class UnsupportedFormatError(ValueError):
     pass
@@ -42,6 +44,10 @@ def engine_for(path: Path, engine: str = "auto") -> str:
         raise UnsupportedFormatError(f"unknown engine: {engine}")
 
     ext = path.suffix.lower()
+    if ext in PDF_EXTENSIONS:
+        if engine in ("auto", "pdf"):
+            return "pdf"
+        raise UnsupportedFormatError("PDFs are converted by ai-pdf; use --engine auto")
     pandoc_ok = ext in PANDOC_EXTENSIONS
     docling_ok = pandoc_ok or ext in DOCLING_ONLY_EXTENSIONS
 

@@ -5,14 +5,14 @@ build-backend = "hatchling.build"
 [project]
 name = "ai-doc2md"
 version = "0.1.0"
-description = "Convert documents (PDF, EPUB, DOCX, HTML, slides, spreadsheets, images) to AI-friendly Markdown"
+description = "Convert documents (EPUB, DOCX, HTML, slides, spreadsheets, images) to AI-friendly Markdown; PDFs go to ai-pdf"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = []
 
 [project.optional-dependencies]
-# Needed for PDFs, scans, slides, spreadsheets, and images. Installs PyTorch, so it is large.
+# Needed for slides, spreadsheets, and images. Installs PyTorch, so it is large.
 docling = ["docling>=2.0.0", "odfdo"]
 dev = ["pytest>=8"]
 

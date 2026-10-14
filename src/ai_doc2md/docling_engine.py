@@ -6,45 +6,12 @@ from pathlib import Path
 from ai_doc2md.errors import ConversionError
 from ai_doc2md.postprocess import promote_title
 
-OCR_MODES = ("auto", "on", "off")
-
-# A page with fewer characters than this in its text layer is treated as a scan.
-MIN_TEXT_CHARS_PER_PAGE = 20
-
-
-def pdf_needs_ocr(path: Path) -> bool:
-    """Return True if any page of the PDF has no usable text layer.
-
-    If the file cannot be read, return True: OCR is the safe default.
-    """
-    try:
-        import pypdfium2 as pdfium
-    except ImportError:
-        return True
-    try:
-        pdf = pdfium.PdfDocument(str(path))
-    except Exception:
-        return True
-    try:
-        for index in range(len(pdf)):
-            text = pdf[index].get_textpage().get_text_range().strip()
-            if len(text) < MIN_TEXT_CHARS_PER_PAGE:
-                return True
-        return False
-    finally:
-        pdf.close()
-
-
 def convert(
     input_path: Path,
     output_path: Path,
     device: str = "cpu",
     keep_repeated_headers: bool = False,
-    ocr: str = "auto",
 ) -> None:
-    if ocr not in OCR_MODES:
-        raise ValueError(f"ocr must be one of {OCR_MODES}, not {ocr!r}")
-
     # Imported here so that pandoc-only conversions never load PyTorch.
     try:
         from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
@@ -66,13 +33,7 @@ def convert(
         "auto": AcceleratorDevice.AUTO,
     }[device]
 
-    is_pdf = input_path.suffix.lower() == ".pdf"
-    if is_pdf:
-        do_ocr = ocr == "on" or (ocr == "auto" and pdf_needs_ocr(input_path))
-    else:
-        do_ocr = True  # other formats use their own pipelines; this value is not used
-
-    pipeline_options = PdfPipelineOptions(do_ocr=do_ocr, generate_picture_images=True)
+    pipeline_options = PdfPipelineOptions(generate_picture_images=True)
     pipeline_options.accelerator_options = AcceleratorOptions(
         device=accelerator, num_threads=os.cpu_count() or 4
     )

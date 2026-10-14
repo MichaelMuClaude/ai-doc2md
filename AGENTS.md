@@ -4,14 +4,14 @@ This file is for AI coding agents that read, test, or change this project. The h
 
 ## What this project is
 
-`ai-doc2md` converts documents to Markdown. It picks an engine by file extension: pandoc for text-based formats, Docling for PDFs, slides, spreadsheets, and images. Everything runs locally.
+`ai-doc2md` converts documents to Markdown. It picks an engine by file extension: pandoc for text-based formats, Docling for slides, spreadsheets, and images. PDFs are not handled here: they go to the `ai-pdf` tool. Everything runs locally.
 
 ## Promises to keep
 
 1. **Local only.** Do not add calls to cloud APIs, telemetry, or uploads of document content.
 2. **Visible filtering.** Anything the Docling header/footer filter removes must be reported in the output note and on stdout. Never remove content silently.
 3. **Explicit routing.** A format must appear in `formats.py` to be accepted. Unknown types exit with code 2. Never guess an engine for an unknown format.
-4. **Forced engines fail loudly.** `--engine pandoc` on a PDF is an error, not a fallback.
+4. **Forced engines fail loudly.** `--engine pandoc` on an image is an error, not a fallback. PDFs always go to ai-pdf.
 5. **Optional heavy dependency.** Docling is an optional extra. Import it only inside `docling_engine.py`, so pandoc-only use never loads PyTorch.
 6. **Stable CLI.** Keep the `convert` subcommand, its flags, and the exit codes (0 success, 1 failure, 2 unsupported type) backward compatible.
 7. **Relative image links.** Image links in the output must resolve relative to the Markdown file.
@@ -33,7 +33,7 @@ tests/
   test_pandoc_engine.py   real pandoc runs on small generated files (skipped without pandoc)
   test_cli_routing.py     CLI dispatch with the engines mocked
   test_furniture.py       Docling filter on synthetic documents (needs the docling extra)
-  test_docling_engine.py OCR detection, PDF conversion, missing-Docling message (needs the docling extra)
+  test_docling_engine.py the missing-Docling message (needs the docling extra)
 SKILL.md             usage guide for agents that call the tool
 ```
 

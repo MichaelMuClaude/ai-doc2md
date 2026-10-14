@@ -11,15 +11,16 @@ def _args(**overrides):
     return SimpleNamespace(**base)
 
 
-def test_pdf_is_routed_to_docling(monkeypatch, tmp_path):
+def test_pdf_is_routed_to_ai_pdf(monkeypatch, tmp_path):
     calls = []
-    monkeypatch.setattr(docling_engine, "convert", lambda *a, **k: calls.append(("docling", a, k)))
-    monkeypatch.setattr(pandoc_engine, "convert", lambda *a, **k: calls.append(("pandoc", a, k)))
+    monkeypatch.setattr(cli, "_convert_pdf", lambda *a, **k: calls.append("pdf"))
+    monkeypatch.setattr(docling_engine, "convert", lambda *a, **k: calls.append("docling"))
+    monkeypatch.setattr(pandoc_engine, "convert", lambda *a, **k: calls.append("pandoc"))
 
     source = tmp_path / "scan.pdf"
     source.write_bytes(b"%PDF-1.4 fake")
     assert cli._convert(_args(input=str(source), output=str(tmp_path / "scan.md"))) == 0
-    assert calls and calls[0][0] == "docling"
+    assert calls == ["pdf"]
 
 
 def test_epub_is_routed_to_pandoc(monkeypatch, tmp_path):
@@ -31,6 +32,14 @@ def test_epub_is_routed_to_pandoc(monkeypatch, tmp_path):
     source.write_bytes(b"not really an epub")
     assert cli._convert(_args(input=str(source))) == 0
     assert calls == ["pandoc"]
+
+
+def test_pdf_conversion_without_ai_pdf_gives_a_clear_message(monkeypatch, tmp_path, capsys):
+    monkeypatch.setitem(sys.modules, "ai_pdf", None)
+    source = tmp_path / "scan.pdf"
+    source.write_bytes(b"%PDF-1.4 fake")
+    assert cli._convert(_args(input=str(source))) == 1
+    assert "ai-pdf" in capsys.readouterr().err
 
 
 def test_forced_engine_is_respected(monkeypatch, tmp_path):

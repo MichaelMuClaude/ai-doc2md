@@ -4,7 +4,6 @@ Uses synthetic in-process DoclingDocuments -- fast, offline, no PDF or model
 download needed. See docs/design-strip-running-furniture.md, test plan items 1-9.
 """
 
-from types import SimpleNamespace
 
 from docling_core.types.doc.base import BoundingBox, CoordOrigin, Size
 from docling_core.types.doc.document import (
@@ -222,77 +221,3 @@ def test_format_note_single_line_with_counts():
 
 
 # --- test plan items 8/9: CLI-level filtering, note, and opt-out ------------
-
-class _FakeConverter:
-    def __init__(self, format_options=None):
-        pass
-
-    def convert(self, path):
-        return SimpleNamespace(document=self._doc)
-
-    _doc = None
-
-
-def _run_convert(monkeypatch, tmp_path, keep_flag):
-    import docling.document_converter
-    from ai_doc2md import cli
-
-    doc = make_doc(20)
-    for p in range(1, 21):
-        add_heading_at(doc, WATERMARK, p, 0.04)
-    add_heading_at(doc, "Real Content", 1, 0.5, level=1)
-
-    _FakeConverter._doc = doc
-    monkeypatch.setattr(docling.document_converter, "DocumentConverter", _FakeConverter)
-
-    input_pdf = tmp_path / "in.pdf"
-    input_pdf.write_bytes(b"%PDF-1.4 fake")
-    output_md = tmp_path / "out.md"
-    args = SimpleNamespace(
-        input=str(input_pdf),
-        output=str(output_md),
-        device="cpu",
-        keep_repeated_headers=keep_flag,
-    )
-    assert cli._convert(args) == 0
-    return output_md.read_text(encoding="utf-8")
-
-
-def test_convert_filters_by_default_and_prepends_note(monkeypatch, tmp_path):
-    md = _run_convert(monkeypatch, tmp_path, keep_flag=False)
-
-    assert WATERMARK not in md.replace('"' + WATERMARK + '"', "")  # only in the note
-    assert md.startswith("> [ai-doc2md] Filtered repeated running header/footer text:")
-    assert '"TLP AMBER + STRICT" (20/20 pages)' in md.splitlines()[0]
-    assert "Real Content" in md
-
-
-def test_convert_keep_repeated_headers_opt_out(monkeypatch, tmp_path):
-    md = _run_convert(monkeypatch, tmp_path, keep_flag=True)
-
-    assert WATERMARK in md
-    assert "[ai-doc2md] Filtered" not in md
-
-
-def test_convert_no_note_when_nothing_filtered(monkeypatch, tmp_path):
-    import docling.document_converter
-    from ai_doc2md import cli
-
-    doc = make_doc(2)
-    add_heading_at(doc, "Only Content", 1, 0.5, level=1)
-    _FakeConverter._doc = doc
-    monkeypatch.setattr(docling.document_converter, "DocumentConverter", _FakeConverter)
-
-    input_pdf = tmp_path / "in.pdf"
-    input_pdf.write_bytes(b"%PDF-1.4 fake")
-    output_md = tmp_path / "out.md"
-    args = SimpleNamespace(
-        input=str(input_pdf),
-        output=str(output_md),
-        device="cpu",
-        keep_repeated_headers=False,
-    )
-    assert cli._convert(args) == 0
-    md = output_md.read_text(encoding="utf-8")
-    assert "[ai-doc2md] Filtered" not in md
-    assert "Only Content" in md
