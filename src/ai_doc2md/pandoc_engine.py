@@ -4,11 +4,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from ai_doc2md.errors import ConversionError
 from ai_doc2md.postprocess import unwrap_internal_links
 
-
-class ConversionError(RuntimeError):
-    pass
+__all__ = ["ConversionError", "convert"]
 
 
 def convert(input_path: Path, output_path: Path) -> None:

@@ -1,4 +1,4 @@
-"""Clean-up applied to Markdown produced by pandoc."""
+"""Clean-up applied to Markdown produced by the engines."""
 
 import re
 
@@ -10,3 +10,18 @@ _INTERNAL_LINK = re.compile(r"\[((?:\\.|[^\]\\])*)\]\([^)]*\.xhtml[^)]*\)")
 
 def unwrap_internal_links(markdown: str) -> str:
     return _INTERNAL_LINK.sub(r"\1", markdown)
+
+
+def promote_title(markdown: str) -> str:
+    """Make the first level-2 heading the title, if the document has no level-1 heading.
+
+    Docling reports every heading as the same level, so a PDF's title comes out as a
+    level-2 heading. This is a heuristic: when the first heading of a document is a
+    chapter rather than the title, that chapter becomes level 1.
+    """
+    if re.search(r"^# ", markdown, re.M):
+        return markdown
+    match = re.search(r"^## ", markdown, re.M)
+    if match is None:
+        return markdown
+    return markdown[: match.start()] + "# " + markdown[match.start() + 3 :]

@@ -19,6 +19,7 @@ ai-doc2md convert input.epub                 # writes input.md and input-media/
 ai-doc2md convert input.pdf -o out/input.md  # choose the output path
 ai-doc2md convert input.pptx --engine docling
 ai-doc2md convert input.pdf --keep-repeated-headers
+ai-doc2md convert scan.pdf --ocr on         # force OCR (default: only when a page has no text)
 ```
 
 - **Success:** exit code 0, and the output path is printed.
@@ -37,7 +38,8 @@ ai-doc2md convert input.pdf --keep-repeated-headers
 
 ## Known limits
 
-- Heading levels come from the source file, and some sources have inconsistent levels. Check the outline before relying on it.
-- Scanned documents are slow.
+- Headings: the first heading becomes level 1 and the rest level 2. Check the outline before relying on it.
+- Scanned documents are slow. OCR can misread characters.
+- Pictures from PDFs are saved in `<name>-media/` and linked.
 - Maths appears as LaTeX inside `$...$`.
 - DRM-protected files cannot be converted.

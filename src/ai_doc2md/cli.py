@@ -4,8 +4,8 @@ from pathlib import Path
 
 from ai_doc2md import __version__
 from ai_doc2md import docling_engine, pandoc_engine
+from ai_doc2md.errors import ConversionError
 from ai_doc2md.formats import ENGINES, UnsupportedFormatError, engine_for
-from ai_doc2md.pandoc_engine import ConversionError
 
 
 def _convert(args: argparse.Namespace) -> int:
@@ -30,6 +30,7 @@ def _convert(args: argparse.Namespace) -> int:
                 output_path,
                 device=getattr(args, "device", "cpu"),
                 keep_repeated_headers=getattr(args, "keep_repeated_headers", False),
+                ocr=getattr(args, "ocr", "auto"),
             )
     except ConversionError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -42,7 +43,7 @@ def _convert(args: argparse.Namespace) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="ai-doc2md",
-        description="Convert documents (PDF, EPUB, DOCX, HTML, slides, spreadsheets, images) to Markdown",
+        description="Convert documents (PDF, EPUB, DOCX, slides, spreadsheets, images) to AI-friendly Markdown",
     )
     parser.add_argument("--version", action="version", version=__version__)
 
@@ -59,6 +60,13 @@ def main() -> None:
         default="auto",
         help="auto picks pandoc for text formats (EPUB, DOCX, HTML, ODT, RTF, LaTeX) and "
         "Docling for everything else; pandoc or docling forces one engine",
+    )
+    convert_parser.add_argument(
+        "--ocr",
+        choices=["auto", "on", "off"],
+        default="auto",
+        help="PDFs only. auto runs OCR only when a page has no text layer (default); "
+        "on always runs OCR; off never runs OCR",
     )
     convert_parser.add_argument(
         "--device",

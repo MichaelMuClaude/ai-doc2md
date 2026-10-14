@@ -25,13 +25,15 @@ src/ai_doc2md/
   pandoc_engine.py   pandoc conversion, image extraction, link clean-up
   docling_engine.py  Docling conversion, header/footer filter, optional dependency
   furniture.py       detection and removal of repeated running headers and footers
-  postprocess.py     clean-up of pandoc output
+  postprocess.py     link clean-up, title promotion
+  errors.py          ConversionError, the user-facing error type
 tests/
   test_formats.py         routing table
   test_postprocess.py     link clean-up
   test_pandoc_engine.py   real pandoc runs on small generated files (skipped without pandoc)
   test_cli_routing.py     CLI dispatch with the engines mocked
   test_furniture.py       Docling filter on synthetic documents (needs the docling extra)
+  test_docling_engine.py OCR detection, PDF conversion, missing-Docling message (needs the docling extra)
 SKILL.md             usage guide for agents that call the tool
 ```
 
