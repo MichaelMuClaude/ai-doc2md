@@ -38,7 +38,7 @@ Requires Python 3.10 or newer.
 ## Limits
 
 - Heading levels come from the source file. Some EPUBs and PDFs have inconsistent heading levels, and the output keeps them. Check the outline for important documents.
-- Scanned PDFs and images are slow, because OCR runs on every page.
+- Scanned PDFs and images are slow, because OCR runs on every page. OCR can misread characters, and Docling sometimes marks OCR text as a heading. Check the output against the image.
 - Docling does not extract images into the Markdown yet, so PDF output has no picture files.
 - Maths is written as LaTeX inside `$...$`, which plain-text viewers show as raw code.
 - DRM-protected files cannot be converted. Only convert files you have the right to convert.
